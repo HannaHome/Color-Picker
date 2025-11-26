@@ -1,549 +1,693 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>色碼選擇器</title>
-    <!-- 引入 Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* 設定基本字體和背景 */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f7f9fb; /* 淺灰色背景 */
-        }
-        /* 主要色彩選擇區塊的樣式 */
-        #colorCanvas {
-            cursor: crosshair;
-            /* 移除邊框，讓色彩選擇區塊更平滑 */
-        }
-        /* 亮度滑桿區塊的樣式 */
-        #valueCanvas {
-            cursor: ns-resize;
-            /* 移除邊框 */
-        }
-        /* 定義滑桿指示器 (圓圈) 的樣式 */
-        .picker-indicator {
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            border: 2px solid white;
-            /* 添加黑色外框，確保在任何顏色上都可見 */
-            box-shadow: 0 0 0 1px #000, 0 0 5px rgba(0, 0, 0, 0.8);
-            pointer-events: none; /* 讓點擊穿透到 canvas */
-            transform: translate(-50%, -50%);
-            z-index: 10;
-        }
-        /* 亮度滑桿的指示器樣式 */
-        .slider-indicator {
-            position: absolute;
-            width: 100%;
-            height: 8px;
-            background: white;
-            border: 2px solid #374151; /* 深灰色邊框 */
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
-            pointer-events: none;
-            transform: translateY(-50%);
-            z-index: 10;
-        }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>色碼選擇器</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --panel-bg: rgba(255,255,255,0.6);
+    --accent: #5b8cff;
+    --muted: #64748b;
+    --radius: 16px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Arial;
+    background: radial-gradient(1200px 600px at 10% 10%, #f7fbff 0%, transparent 20%),
+                radial-gradient(1000px 400px at 90% 90%, #fff2f8 0%, transparent 18%),
+                linear-gradient(180deg,#eef5ff 0%, #fbfbff 100%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:28px;
+    color:#0f172a;
+  }
+
+  .card{
+    width:980px;
+    max-width:96%;
+    border-radius:24px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.86), rgba(255,255,255,0.72));
+    box-shadow: 0 12px 40px rgba(16,24,40,0.12), inset 0 1px 0 rgba(255,255,255,0.6);
+    padding:22px;
+    border: 1px solid rgba(99,102,241,0.06);
+    backdrop-filter: blur(10px) saturate(120%);
+    overflow:hidden;
+  }
+
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:16px;
+  }
+  h1{font-size:20px;margin:0;font-weight:700;color:#0b1220}
+  .subtitle{font-size:12px;color:var(--muted)}
+
+  .grid{
+    display:grid;
+    grid-template-columns: 1fr 340px;
+    gap:18px;
+    align-items:start;
+  }
+
+  /* left area: picker */
+  .picker-wrap{
+    display:flex;
+    gap:14px;
+    align-items:stretch;
+  }
+
+  .hs-box{
+    flex:1;
+    min-height:320px;
+    border-radius:16px;
+    overflow:hidden;
+    position:relative;
+    box-shadow: 0 8px 24px rgba(15,23,42,0.06);
+    border:1px solid rgba(15,23,42,0.04);
+  }
+  canvas{display:block;width:100%;height:100%}
+  .indicator{
+    position:absolute;
+    width:18px;height:18px;border-radius:50%;
+    transform:translate(-50%,-50%);
+    box-shadow: 0 0 0 4px rgba(255,255,255,0.85), 0 6px 12px rgba(2,6,23,0.25);
+    pointer-events:none;
+  }
+
+  .v-box{
+    width:44px;
+    min-height:320px;
+    border-radius:12px;
+    overflow:hidden;
+    position:relative;
+    box-shadow: 0 8px 24px rgba(2,6,23,0.04);
+    border:1px solid rgba(15,23,42,0.04);
+  }
+  .v-ind{
+    position:absolute;
+    left:0;right:0;
+    height:10px;
+    border-radius:6px;
+    transform:translateY(-50%);
+    pointer-events:none;
+    box-shadow: 0 6px 10px rgba(2,6,23,0.12);
+  }
+
+  /* preview */
+  .preview{
+    margin-top:14px;
+    border-radius:14px;
+    height:92px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:white;
+    font-weight:700;
+    font-size:16px;
+    letter-spacing:0.2px;
+    border:1px solid rgba(0,0,0,0.06);
+    box-shadow: inset 0 -10px 30px rgba(0,0,0,0.08);
+  }
+
+  /* right panel */
+  .panel-right{
+    padding:16px;
+    background:linear-gradient(180deg,rgba(255,255,255,0.7),rgba(255,255,255,0.5));
+    border-radius:14px;
+    border:1px solid rgba(2,6,23,0.04);
+  }
+
+  .field{margin-bottom:12px}
+  label{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px}
+  input[type="text"], input[type="number"]{
+    width:100%;
+    padding:10px 12px;
+    border-radius:10px;
+    border:1px solid rgba(15,23,42,0.06);
+    background:linear-gradient(180deg,#ffffff,#fbfdff);
+    font-size:14px;
+    outline:none;
+    transition:box-shadow .12s, border-color .12s, transform .08s;
+    text-align:center;
+  }
+  input[type="text"]:focus, input[type="number"]:focus{
+    box-shadow:0 6px 18px rgba(59,130,246,0.12);
+    border-color:var(--accent);
+  }
+
+  .row{display:flex;gap:8px}
+  .row .col{flex:1}
+
+  .copy-btn{
+    margin-top:6px;
+    display:inline-flex;
+    gap:8px;
+    align-items:center;
+    justify-content:center;
+    padding:8px 12px;
+    border-radius:10px;
+    border:1px solid rgba(15,23,42,0.06);
+    background:linear-gradient(180deg,#fff,#f7fbff);
+    cursor:pointer;
+    font-weight:600;
+    color:var(--accent);
+    transition:transform .08s, box-shadow .12s;
+  }
+  .copy-btn:active{transform:translateY(1px)}
+  .swatches{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .swatch{
+    width:34px;height:34px;border-radius:8px;border:1px solid rgba(2,6,23,0.06);
+    box-shadow:0 6px 12px rgba(2,6,23,0.06);
+    cursor:pointer;position:relative;
+  }
+  .note{font-size:12px;color:var(--muted);margin-top:6px}
+
+  .eyedropper-btn{
+    padding:8px 12px;border-radius:10px;border:1px solid rgba(15,23,42,0.06);
+    background:linear-gradient(180deg,#fff,#f7fbff);
+    cursor:pointer;font-weight:700;color:var(--accent);
+  }
+
+  /* small responsiveness */
+  @media (max-width:880px){
+    .grid{grid-template-columns:1fr}
+    .picker-wrap{flex-direction:column}
+    .v-box{width:100%}
+    .hs-box{min-height:220px}
+  }
+
+  /* tiny copy toast */
+  .toast{
+    position:fixed;left:50%;transform:translateX(-50%);
+    bottom:28px;padding:10px 16px;border-radius:999px;background:rgba(15,23,42,0.9);
+    color:white;font-weight:600;font-size:13px;opacity:0;pointer-events:none;
+    transition:opacity .18s, transform .18s;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);pointer-events:auto}
+</style>
 </head>
-<body class="p-4 md:p-8">
+<body>
 
-    <div class="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-2xl">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6 border-b pb-2">色彩選擇器 (Hex/RGB/HSV)</h1>
+<div class="card" role="application" aria-label="色碼選擇器">
+  <header>
+    <div>
+      <h1>Ultra 美型色碼選擇器</h1>
+      <div class="subtitle">即時 Hex / RGB / HSV 轉換 • 可收藏色票 • 支援拖曳與觸控</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button id="eyedropBtn" class="eyedropper-btn" title="從畫面擷取顏色">取色器（從畫面擷取）</button>
+      <button id="resetBtn" style="padding:8px 12px;border-radius:10px;border:1px solid rgba(15,23,42,0.06);background:#fff;font-weight:700;color:var(--muted);cursor:pointer">重設</button>
+    </div>
+  </header>
 
-        <div class="flex flex-col lg:flex-row gap-6">
-
-            <!-- 左側: 選擇器與預覽 -->
-            <div class="lg:w-2/3 flex flex-col gap-6">
-
-                <!-- 選擇器區域 -->
-                <div class="flex gap-4 h-80">
-                    <!-- 1. 色相/飽和度 (H/S) 選擇方格 -->
-                    <div id="colorPickerContainer" class="relative flex-grow h-full rounded-lg overflow-hidden shadow-md border border-gray-300">
-                        <canvas id="colorCanvas" class="w-full h-full"></canvas>
-                        <div id="hsIndicator" class="picker-indicator"></div>
-                    </div>
-
-                    <!-- 2. 亮度 (V) 滑桿 -->
-                    <div id="valueSliderContainer" class="relative w-8 h-full rounded-lg overflow-hidden shadow-md border border-gray-300">
-                        <canvas id="valueCanvas" class="w-full h-full"></canvas>
-                        <div id="vIndicator" class="slider-indicator"></div>
-                    </div>
-                </div>
-
-                <!-- 3. 選定顏色預覽方塊 -->
-                <div class="w-full h-32 rounded-lg shadow-inner flex items-center justify-center border border-gray-200" id="previewBox">
-                    <span class="text-lg font-semibold text-white p-2 rounded-lg bg-black bg-opacity-30">選定顏色預覽</span>
-                </div>
-            </div>
-
-            <!-- 右側: 色碼輸入與顯示 -->
-            <div class="lg:w-1/3 space-y-4">
-                <div class="bg-gray-50 p-4 rounded-xl shadow-inner space-y-3">
-                    <h2 class="text-xl font-semibold text-gray-700">色碼換算與輸入</h2>
-
-                    <!-- 16進位色碼 (Hex) -->
-                    <div>
-                        <label for="hexInput" class="block text-sm font-medium text-gray-700 mb-1">16 進位色碼 (HEX)</label>
-                        <div class="relative mt-1 rounded-md shadow-sm">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-gray-500">#</span>
-                            </div>
-                            <input type="text" id="hexInput" maxlength="6"
-                                class="block w-full pl-7 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm uppercase tracking-wider"
-                                value="FF0000" oninput="handleHexInput(this.value)">
-                        </div>
-                    </div>
-
-                    <!-- RGB 色碼 -->
-                    <div class="flex space-x-2">
-                        <!-- R -->
-                        <div class="flex-1">
-                            <label for="rgbR" class="block text-sm font-medium text-red-500 mb-1">R (紅)</label>
-                            <input type="number" id="rgbR" min="0" max="255"
-                                class="w-full p-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 text-center"
-                                value="255" oninput="handleRgbInput()">
-                        </div>
-                        <!-- G -->
-                        <div class="flex-1">
-                            <label for="rgbG" class="block text-sm font-medium text-green-500 mb-1">G (綠)</label>
-                            <input type="number" id="rgbG" min="0" max="255"
-                                class="w-full p-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 text-center"
-                                value="0" oninput="handleRgbInput()">
-                        </div>
-                        <!-- B -->
-                        <div class="flex-1">
-                            <label for="rgbB" class="block text-sm font-medium text-blue-500 mb-1">B (藍)</label>
-                            <input type="number" id="rgbB" min="0" max="255"
-                                class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-center"
-                                value="0" oninput="handleRgbInput()">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+  <div class="grid">
+    <div>
+      <div class="picker-wrap">
+        <div class="hs-box" id="hsBox" aria-label="色相與飽和度選擇">
+          <canvas id="hsCanvas"></canvas>
+          <div id="hsIndicator" class="indicator" aria-hidden="true"></div>
         </div>
 
+        <div class="v-box" id="vBox" aria-label="亮度選擇">
+          <canvas id="vCanvas"></canvas>
+          <div id="vIndicator" class="v-ind" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <div id="preview" class="preview" aria-live="polite">#FF0000 — RGB(255,0,0)</div>
     </div>
 
-    <script>
-        // --- 全域狀態變數 ---
-        var H = 0; // 色相 (Hue): 0-360
-        var S = 1; // 飽和度 (Saturation): 0-1 (0% - 100%)
-        var V = 1; // 亮度/明度 (Value): 0-1 (0% - 100%)
-        var R = 255; // 紅色: 0-255
-        var G = 0;   // 綠色: 0-255
-        var B = 0;   // 藍色: 0-255
-
-        // --- DOM 元素快取 ---
-        const colorCanvas = document.getElementById('colorCanvas');
-        const colorCtx = colorCanvas.getContext('2d');
-        const valueCanvas = document.getElementById('valueCanvas');
-        const valueCtx = valueCanvas.getContext('2d');
-        const previewBox = document.getElementById('previewBox');
-        const hsIndicator = document.getElementById('hsIndicator');
-        const vIndicator = document.getElementById('vIndicator');
-        const hexInput = document.getElementById('hexInput');
-        const rgbR = document.getElementById('rgbR');
-        const rgbG = document.getElementById('rgbG');
-        const rgbB = document.getElementById('rgbB');
-        
-        const colorContainer = document.getElementById('colorPickerContainer');
-        const valueContainer = document.getElementById('valueSliderContainer');
-
-        var isPickingColor = false;
-        var isSlidingValue = false;
-
-
-        // --- 工具函數：HSV <-> RGB 轉換 ---
-
-        /**
-         * 將 HSV (色相、飽和度、明度) 轉換為 RGB (紅、綠、藍)
-         */
-        function hsvToRgb(h, s, v) {
-            h = h / 60; 
-            const i = Math.floor(h);
-            const f = h - i;
-            const p = v * (1 - s);
-            const q = v * (1 - f * s);
-            const t = v * (1 - (1 - f) * s);
-
-            let r = 0, g = 0, b = 0;
-
-            switch (i % 6) {
-                case 0: r = v; g = t; b = p; break;
-                case 1: r = q; g = v; b = p; break;
-                case 2: r = p; g = v; b = t; break;
-                case 3: r = p; g = q; b = v; break;
-                case 4: r = t; g = p; b = v; break;
-                case 5: r = v; g = p; b = q; break;
-            }
-
-            return {
-                r: Math.round(r * 255),
-                g: Math.round(g * 255),
-                b: Math.round(b * 255)
-            };
-        }
-
-        /**
-         * 將 RGB 轉換為 HSV
-         */
-        function rgbToHsv(r, g, b) {
-            const r_ = r / 255;
-            const g_ = g / 255;
-            const b_ = b / 255;
-
-            const max = Math.max(r_, g_, b_);
-            const min = Math.min(r_, g_, b_);
-            const delta = max - min;
-            
-            let h, s, v = max;
-
-            if (delta === 0) {
-                h = 0;
-                s = 0;
-            } else {
-                s = delta / max;
-                if (max === r_) {
-                    h = (g_ - b_) / delta + (g_ < b_ ? 6 : 0);
-                } else if (max === g_) {
-                    h = (b_ - r_) / delta + 2;
-                } else {
-                    h = (r_ - g_) / delta + 4;
-                }
-                h *= 60;
-            }
-
-            return { h: h, s: s, v: v };
-        }
-
-
-        /**
-         * 將 RGB (0-255) 轉換為 16 進位色碼 (HEX)
-         */
-        function rgbToHex(r, g, b) {
-            const toHex = (c) => c.toString(16).padStart(2, '0');
-            return `${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
-        }
-
-        /**
-         * 將 16 進位色碼 (HEX) 轉換為 RGB
-         */
-        function hexToRgb(hex) {
-            // 移除 # 符號
-            hex = hex.replace(/^#/, '');
-
-            // 處理 3 碼簡寫 (e.g., F00 -> FF0000)
-            if (hex.length === 3) {
-                hex = hex.split('').map(char => char + char).join('');
-            }
-            
-            if (hex.length !== 6) {
-                return { r: 0, g: 0, b: 0 }; // 無效色碼返回黑色
-            }
-
-            const r = parseInt(hex.substring(0, 2), 16);
-            const g = parseInt(hex.substring(2, 4), 16);
-            const b = parseInt(hex.substring(4, 6), 16);
-
-            return { r, g, b };
-        }
-
-
-        // --- 繪製函數 ---
-
-        /**
-         * 繪製色相/飽和度選擇方格 (H on X, S on Y, 固定 V=1)
-         * 修正了光譜偏暗的問題，將 H/S 平面固定在 V=1
-         */
-        function drawColorCanvas() {
-            const width = colorCanvas.width;
-            const height = colorCanvas.height;
-            
-            // 確保畫布清晰
-            colorCtx.clearRect(0, 0, width, height);
-
-            // 1. 繪製色相梯度 (Hue: X 軸, 0-360)
-            let gradientH = colorCtx.createLinearGradient(0, 0, width, 0);
-            for (let i = 0; i <= 360; i += 60) {
-                // *** 修正: 使用 hsvToRgb(H, S=1, V=1) 確保光譜是最高亮度 (V=1) 的純色 ***
-                const rgb = hsvToRgb(i, 1, 1);
-                gradientH.addColorStop(i / 360, `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`);
-            }
-            colorCtx.fillStyle = gradientH;
-            colorCtx.fillRect(0, 0, width, height);
-
-            // 2. 疊加白色遮罩 (Saturation: Y 軸, S=0 在頂部, S=1 在底部)
-            let gradientS = colorCtx.createLinearGradient(0, 0, 0, height);
-            gradientS.addColorStop(0, 'rgba(255, 255, 255, 1)'); // 頂部 (Y=0): 白色 (S=0)
-            gradientS.addColorStop(1, 'rgba(255, 255, 255, 0)'); // 底部 (Y=H): 透明 (S=1)
-            colorCtx.fillStyle = gradientS;
-            colorCtx.fillRect(0, 0, width, height);
-            
-            // 3. *** 移除黑色遮罩 (Value/Brightness: Y 軸) ***
-            // 由於 V 由獨立滑桿控制，此處固定 V=1，以保持光譜的最高亮度。
-        }
-
-        /**
-         * 繪製亮度滑桿
-         */
-        function drawValueCanvas() {
-            const width = valueCanvas.width;
-            const height = valueCanvas.height;
-
-            // 取得當前 H 和 S 決定的純色 (V=1)
-            // 注意: 這裡的 V 始終取 1，確保滑桿頂部是 H/S 平面選取的純色
-            const pureRgb = hsvToRgb(H, S, 1); 
-            const pureColor = `rgb(${pureRgb.r}, ${pureRgb.g}, ${pureRgb.b})`;
-
-            // 從頂部的純色 (V=1) 到底部的黑色 (V=0) 繪製線性梯度
-            const gradientSimple = valueCtx.createLinearGradient(0, 0, 0, height);
-            gradientSimple.addColorStop(0, pureColor); // 頂部: 純色 (V=1)
-            gradientSimple.addColorStop(1, '#000000'); // 底部: 黑色 (V=0)
-            
-            valueCtx.fillStyle = gradientSimple;
-            valueCtx.fillRect(0, 0, width, height);
-        }
-
-        /**
-         * 更新所有顯示元件 (預覽、輸入欄、指示器)
-         */
-        function updateDisplay() {
-            // 1. 轉換並更新 RGB
-            const rgb = hsvToRgb(H, S, V);
-            R = rgb.r; G = rgb.g; B = rgb.b;
-
-            // 避免在使用者輸入時覆蓋，只在點擊時更新
-            rgbR.value = R;
-            rgbG.value = G;
-            rgbB.value = B;
-
-            // 2. 轉換並更新 HEX
-            const hex = rgbToHex(R, G, B);
-            hexInput.value = hex;
-
-            // 3. 更新顏色預覽方塊
-            const colorString = `#${hex}`;
-            previewBox.style.backgroundColor = colorString;
-            
-            // 為了文字清晰度，根據亮度切換文字顏色
-            const brightness = (R * 299 + G * 587 + B * 114) / 1000;
-            const textColor = brightness > 128 ? 'text-gray-900' : 'text-white';
-            const textElement = previewBox.querySelector('span');
-            // 保持原本的樣式，只更新文字顏色
-            textElement.className = `text-lg font-semibold p-2 rounded-lg bg-black bg-opacity-30 ${textColor}`;
-
-
-            // 4. 更新 H/S 選擇器上的指示器位置 (修正定位邏輯)
-            const colorCanvasRect = colorCanvas.getBoundingClientRect();
-            
-            // H: 0-360 對應 X 軸 0-W
-            const hsX = H / 360 * colorCanvas.width;
-            // S: 0-1 對應 Y 軸 0-H
-            const hsY = S * colorCanvas.height; 
-            
-            hsIndicator.style.left = `${hsX}px`;
-            hsIndicator.style.top = `${hsY}px`;
-
-
-            // 5. 更新 V 滑桿上的指示器位置
-            const valueCanvasRect = valueCanvas.getBoundingClientRect();
-            // V: 1-0 對應 Y 軸 0-H
-            const vY = (1 - V) * valueCanvas.height; 
-            vIndicator.style.top = `${vY}px`;
-            // 指示器背景為選中的顏色，確保在滑動時能正確表示 V 的位置
-            vIndicator.style.backgroundColor = colorString; 
-
-
-            // 6. 重繪 V 滑桿 (因為 H/S 改變了，純色也改變了)
-            drawValueCanvas();
-        }
-
-        /**
-         * 處理 H/S 選擇方格的點擊/拖曳事件
-         */
-        function handleColorPick(event) {
-            if (!isPickingColor && event.type !== 'mousedown' && event.type !== 'touchstart') return;
-            
-            const rect = colorCanvas.getBoundingClientRect();
-            let clientX, clientY;
-
-            if (event.touches) {
-                clientX = event.touches[0].clientX;
-                clientY = event.touches[0].clientY;
-            } else {
-                clientX = event.clientX;
-                clientY = event.clientY;
-            }
-
-            // 計算點擊位置相對於 Canvas 的坐標
-            let x = clientX - rect.left;
-            let y = clientY - rect.top;
-
-            // 限制坐標在 Canvas 範圍內
-            x = Math.max(0, Math.min(x, rect.width));
-            y = Math.max(0, Math.min(y, rect.height));
-
-            // 更新 H (色相) 和 S (飽和度)
-            // H: 0-360, 對應 X 軸 (0-width)
-            H = (x / rect.width) * 360;
-            
-            // S: 0-1, 對應 Y 軸 (0=白, H=純色)
-            S = y / rect.height; 
-            S = Math.max(0, Math.min(S, 1)); // 限制在 0 到 1 之間
-            
-            // 繪製 V 滑桿，並更新顯示
-            updateDisplay();
-            
-            if (event.cancelable) event.preventDefault();
-        }
-
-        /**
-         * 處理 V 滑桿的點擊/拖曳事件
-         */
-        function handleValueSlide(event) {
-            if (!isSlidingValue && event.type !== 'mousedown' && event.type !== 'touchstart') return;
-            
-            const rect = valueCanvas.getBoundingClientRect();
-            let clientY;
-
-            if (event.touches) {
-                clientY = event.touches[0].clientY;
-            } else {
-                clientY = event.clientY;
-            }
-            
-            // 計算點擊位置相對於 Canvas 的 Y 坐標
-            let y = clientY - rect.top;
-
-            // 限制坐標在 Canvas 範圍內
-            y = Math.max(0, Math.min(y, rect.height));
-
-            // 更新 V (亮度/明度)
-            // V: 1-0, 對應 Y 軸 (0-height)
-            V = 1 - (y / rect.height);
-            V = Math.max(0, Math.min(V, 1)); // 限制在 0 到 1 之間
-
-            // 更新顯示
-            updateDisplay();
-            
-            if (event.cancelable) event.preventDefault();
-        }
-        
-        // --- 輸入處理函數 ---
-
-        /**
-         * 處理 Hex 輸入框的變更
-         */
-        function handleHexInput(hex) {
-            if (hex.length === 6 || hex.length === 3) {
-                const rgb = hexToRgb(hex);
-                if (!isNaN(rgb.r) && !isNaN(rgb.g) && !isNaN(rgb.b)) {
-                    R = rgb.r; G = rgb.g; B = rgb.b;
-                    
-                    // RGB 轉 HSV
-                    const hsv = rgbToHsv(R, G, B);
-                    H = hsv.h; S = hsv.s; V = hsv.v;
-
-                    drawValueCanvas();
-                    updateDisplay();
-                }
-            }
-        }
-
-        /**
-         * 處理 RGB 輸入框的變更
-         */
-        function handleRgbInput() {
-            const r = parseInt(rgbR.value || 0);
-            const g = parseInt(rgbG.value || 0);
-            const b = parseInt(rgbB.value || 0);
-
-            // 確保值在 0-255 範圍內
-            R = Math.max(0, Math.min(r, 255));
-            G = Math.max(0, Math.min(g, 255));
-            B = Math.max(0, Math.min(b, 255));
-
-            // 更新輸入框的值（處理鉗制）
-            rgbR.value = R;
-            rgbG.value = G;
-            rgbB.value = B;
-
-            // RGB 轉 HSV
-            const hsv = rgbToHsv(R, G, B);
-            H = hsv.h; S = hsv.s; V = hsv.v;
-
-            drawValueCanvas();
-            updateDisplay();
-        }
-
-
-        // --- 初始化與事件監聽 ---
-
-        function init() {
-            // 確保 Canvas 寬高與容器匹配
-            const colorRect = colorContainer.getBoundingClientRect();
-            colorCanvas.width = colorRect.width;
-            colorCanvas.height = colorRect.height;
-
-            const valueRect = valueContainer.getBoundingClientRect();
-            valueCanvas.width = valueRect.width;
-            valueCanvas.height = valueRect.height;
-
-            // 繪製 H/S 選擇器
-            drawColorCanvas();
-            
-            // 初始顯示 (紅色)
-            updateDisplay();
-
-            // --- H/S 選擇器事件 ---
-            colorCanvas.addEventListener('mousedown', (e) => { isPickingColor = true; handleColorPick(e); });
-            document.addEventListener('mousemove', (e) => { if (isPickingColor) handleColorPick(e); });
-            document.addEventListener('mouseup', () => { isPickingColor = false; });
-            
-            // Touch Events for H/S
-            colorCanvas.addEventListener('touchstart', (e) => { isPickingColor = true; handleColorPick(e); });
-            document.addEventListener('touchmove', (e) => { if (isPickingColor) handleColorPick(e); });
-            document.addEventListener('touchend', () => { isPickingColor = false; });
-            // 防止整個文件拖曳時的預設行為
-            document.addEventListener('touchcancel', () => { isPickingColor = false; });
-
-
-            // --- V 滑桿事件 ---
-            valueCanvas.addEventListener('mousedown', (e) => { isSlidingValue = true; handleValueSlide(e); });
-            document.addEventListener('mousemove', (e) => { if (isSlidingValue) handleValueSlide(e); });
-            document.addEventListener('mouseup', () => { isSlidingValue = false; });
-
-            // Touch Events for V
-            valueCanvas.addEventListener('touchstart', (e) => { isSlidingValue = true; handleValueSlide(e); });
-            document.addEventListener('touchmove', (e) => { if (isSlidingValue) handleValueSlide(e); });
-            document.addEventListener('touchend', () => { isSlidingValue = false; });
-            document.addEventListener('touchcancel', () => { isSlidingValue = false; });
-
-
-            // 處理視窗大小改變
-            window.addEventListener('resize', () => {
-                const colorRect = colorContainer.getBoundingClientRect();
-                colorCanvas.width = colorRect.width;
-                colorCanvas.height = colorRect.height;
-                
-                const valueRect = valueContainer.getBoundingClientRect();
-                valueCanvas.width = valueRect.width;
-                valueCanvas.height = valueRect.height;
-
-                drawColorCanvas();
-                updateDisplay();
-            });
-        }
-        
-        // 確保 DOM 準備好後才初始化
-        window.onload = init;
-
-    </script>
+    <aside class="panel-right" aria-label="色碼資訊">
+      <div class="field">
+        <label for="hex">Hex（可輸入 3 或 6 碼，# 可有可無）</label>
+        <input id="hex" type="text" maxlength="7" placeholder="FF00AA 或 #FF00AA" value="#FF0000" aria-describedby="hexHelp">
+        <div class="note" id="hexHelp">輸入 Hex 後會立即更新畫面</div>
+      </div>
+
+      <div class="field row">
+        <div class="col">
+          <label for="r">R</label>
+          <input id="r" type="number" min="0" max="255" value="255">
+        </div>
+        <div class="col">
+          <label for="g">G</label>
+          <input id="g" type="number" min="0" max="255" value="0">
+        </div>
+        <div class="col">
+          <label for="b">B</label>
+          <input id="b" type="number" min="0" max="255" value="0">
+        </div>
+      </div>
+
+      <div class="field row" style="align-items:center">
+        <div style="flex:1">
+          <label>HSV</label>
+          <div style="display:flex;gap:8px">
+            <input id="h" type="number" min="0" max="360" value="0" style="flex:1" />
+            <input id="s" type="number" min="0" max="100" value="100" style="width:84px" />
+            <input id="v" type="number" min="0" max="100" value="100" style="width:84px" />
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <div class="copy-btn" id="copyHexBtn" title="複製 Hex">複製 Hex</div>
+        <div class="copy-btn" id="copyRgbBtn" title="複製 RGB">複製 RGB</div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label>常用色票</label>
+        <div class="swatches" id="swatches"></div>
+        <div class="note">點擊套用，長按可替換為自訂收藏（手機長按模擬：觸控 > 1s）</div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite">複製成功</div>
+
+<script>
+/* ===============================
+   Helper color conversion utils
+   =============================== */
+
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+
+function hsvToRgb(h,s,v){
+  let c = v * s;
+  let x = c * (1 - Math.abs((h/60) % 2 -1));
+  let m = v - c;
+  let r=0,g=0,b=0;
+  if (h<60){ r=c; g=x; b=0; }
+  else if (h<120){ r=x; g=c; b=0; }
+  else if (h<180){ r=0; g=c; b=x; }
+  else if (h<240){ r=0; g=x; b=c; }
+  else if (h<300){ r=x; g=0; b=c; }
+  else { r=c; g=0; b=x; }
+  return { r: Math.round((r+m)*255), g: Math.round((g+m)*255), b: Math.round((b+m)*255) };
+}
+
+function rgbToHsv(r,g,b){
+  r/=255; g/=255; b/=255;
+  let max = Math.max(r,g,b), min = Math.min(r,g,b);
+  let d = max-min;
+  let h = 0;
+  if (d===0) h = 0;
+  else if (max===r) h = ((g-b)/d) % 6;
+  else if (max===g) h = (b-r)/d + 2;
+  else h = (r-g)/d + 4;
+  h = (h * 60);
+  if (h<0) h+=360;
+  let s = max===0?0:d/max;
+  let v = max;
+  return {h:Math.round(h), s:parseFloat(s.toFixed(4)), v:parseFloat(v.toFixed(4))};
+}
+
+function rgbToHex(r,g,b){
+  return [r,g,b].map(x => x.toString(16).padStart(2,'0')).join('').toUpperCase();
+}
+function hexToRgb(hex){
+  hex = (''+hex).trim().replace(/^#/,'');
+  if (hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+  if (!/^[0-9A-Fa-f]{6}$/.test(hex)) return null;
+  return {
+    r: parseInt(hex.slice(0,2),16),
+    g: parseInt(hex.slice(2,4),16),
+    b: parseInt(hex.slice(4,6),16)
+  };
+}
+
+/* ================
+   DOM & state
+   ================ */
+
+const hsCanvas = document.getElementById('hsCanvas');
+const vCanvas = document.getElementById('vCanvas');
+const hsCtx = hsCanvas.getContext('2d');
+const vCtx = vCanvas.getContext('2d');
+
+const hsBox = document.getElementById('hsBox');
+const vBox = document.getElementById('vBox');
+
+const hsIndicator = document.getElementById('hsIndicator');
+const vIndicator = document.getElementById('vIndicator');
+
+const preview = document.getElementById('preview');
+
+const hexInput = document.getElementById('hex');
+const rInput = document.getElementById('r');
+const gInput = document.getElementById('g');
+const bInput = document.getElementById('b');
+const hInput = document.getElementById('h');
+const sInput = document.getElementById('s');
+const vInput = document.getElementById('v');
+
+const copyHexBtn = document.getElementById('copyHexBtn');
+const copyRgbBtn = document.getElementById('copyRgbBtn');
+const swatchesEl = document.getElementById('swatches');
+const resetBtn = document.getElementById('resetBtn');
+const eyedropBtn = document.getElementById('eyedropBtn');
+
+let state = { h: 0, s: 1, v: 1 };
+
+const defaultSwatches = [
+  '#FF3B30','#FF9500','#FFCC00','#34C759','#5AC8FA','#0A84FF','#5856D6','#AF52DE',
+  '#ff7ab6','#ffd6e7','#b8ffe1','#d1e9ff','#ffe9c8'
+];
+
+/* ===========
+   Resizing
+   =========== */
+
+function resizeAll(){
+  const dspr = window.devicePixelRatio||1;
+  function fit(canvas, container){
+    const rect = container.getBoundingClientRect();
+    canvas.width = Math.max(1, Math.floor(rect.width * dspr));
+    canvas.height = Math.max(1, Math.floor(rect.height * dspr));
+    canvas.style.width = rect.width + 'px';
+    canvas.style.height = rect.height + 'px';
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dspr,0,0,dspr,0,0);
+  }
+  fit(hsCanvas, hsBox);
+  fit(vCanvas, vBox);
+  drawHS();
+  drawV();
+  updateUI();
+}
+window.addEventListener('resize', resizeAll);
+window.addEventListener('orientationchange', resizeAll);
+
+/* ===========
+   Drawing
+   =========== */
+
+function drawHS(){
+  const w = hsCanvas.width / (window.devicePixelRatio||1);
+  const h = hsCanvas.height / (window.devicePixelRatio||1);
+  const grad = hsCtx.createLinearGradient(0,0,w,0);
+  for (let i=0;i<=360;i+=60) grad.addColorStop(i/360, `hsl(${i},100%,50%)`);
+  hsCtx.fillStyle = grad;
+  hsCtx.fillRect(0,0,w,h);
+
+  const sat = hsCtx.createLinearGradient(0,0,0,h);
+  sat.addColorStop(0,'rgba(255,255,255,1)');
+  sat.addColorStop(1,'rgba(255,255,255,0)');
+  hsCtx.fillStyle = sat;
+  hsCtx.fillRect(0,0,w,h);
+
+  const val = hsCtx.createLinearGradient(0,0,0,h);
+  val.addColorStop(0,'rgba(0,0,0,0)');
+  val.addColorStop(1,'rgba(0,0,0,1)');
+  hsCtx.fillStyle = val;
+  hsCtx.fillRect(0,0,w,h);
+}
+
+function drawV(){
+  const w = vCanvas.width / (window.devicePixelRatio||1);
+  const h = vCanvas.height / (window.devicePixelRatio||1);
+  const topRgb = hsvToRgb(state.h, state.s, 1);
+  const g = vCtx.createLinearGradient(0,0,0,h);
+  g.addColorStop(0, `rgb(${topRgb.r},${topRgb.g},${topRgb.b})`);
+  g.addColorStop(1, '#000');
+  vCtx.fillStyle = g;
+  vCtx.fillRect(0,0,w,h);
+}
+
+/* ====================
+   Indicator & UI sync
+   ==================== */
+
+function updateUI(){
+  const rgb = hsvToRgb(state.h, state.s, state.v);
+  const hex = '#' + rgbToHex(rgb.r, rgb.g, rgb.b);
+  preview.style.background = hex;
+  const brightness = (rgb.r*299 + rgb.g*587 + rgb.b*114)/1000;
+  preview.style.color = brightness > 140 ? '#0b1220' : '#fff';
+  preview.textContent = `${hex} — RGB(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+
+  hexInput.value = hex;
+  rInput.value = rgb.r;
+  gInput.value = rgb.g;
+  bInput.value = rgb.b;
+
+  hInput.value = Math.round(state.h);
+  sInput.value = Math.round(state.s * 100);
+  vInput.value = Math.round(state.v * 100);
+
+  const hsRect = hsBox.getBoundingClientRect();
+  const x = (state.h % 360) / 360 * hsRect.width;
+  const y = (1 - state.s) * hsRect.height;
+  hsIndicator.style.left = `${x}px`;
+  hsIndicator.style.top = `${y}px`;
+
+  const vRect = vBox.getBoundingClientRect();
+  const vy = (1 - state.v) * vRect.height;
+  vIndicator.style.top = `${vy}px`;
+  vIndicator.style.background = hex;
+}
+
+/* ====================
+   Pointer interactions
+   ==================== */
+
+let pickingHS = false;
+let pickingV = false;
+
+function hsPointer(e){
+  const rect = hsBox.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  let x = (clientX - rect.left);
+  let y = (clientY - rect.top);
+  x = clamp(x, 0, rect.width);
+  y = clamp(y, 0, rect.height);
+  state.h = (x/rect.width) * 360;
+  state.s = 1 - (y/rect.height);
+  drawV();
+  updateUI();
+}
+
+function vPointer(e){
+  const rect = vBox.getBoundingClientRect();
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  let y = (clientY - rect.top);
+  y = clamp(y, 0, rect.height);
+  state.v = 1 - (y/rect.height);
+  updateUI();
+}
+
+hsBox.addEventListener('mousedown', (e)=>{ pickingHS=true; hsPointer(e); });
+window.addEventListener('mousemove', (e)=>{ if(pickingHS) hsPointer(e); });
+window.addEventListener('mouseup', ()=>{ pickingHS=false; });
+
+hsBox.addEventListener('touchstart', (e)=>{ pickingHS=true; hsPointer(e); e.preventDefault(); }, {passive:false});
+window.addEventListener('touchmove', (e)=>{ if(pickingHS) hsPointer(e); }, {passive:false});
+window.addEventListener('touchend', ()=>{ pickingHS=false; });
+
+vBox.addEventListener('mousedown', (e)=>{ pickingV=true; vPointer(e); });
+window.addEventListener('mousemove', (e)=>{ if(pickingV) vPointer(e); });
+window.addEventListener('mouseup', ()=>{ pickingV=false; });
+
+vBox.addEventListener('touchstart', (e)=>{ pickingV=true; vPointer(e); e.preventDefault(); }, {passive:false});
+window.addEventListener('touchmove', (e)=>{ if(pickingV) vPointer(e); }, {passive:false});
+window.addEventListener('touchend', ()=>{ pickingV=false; });
+
+/* ====================
+   Inputs -> update state
+   ==================== */
+
+hexInput.addEventListener('input', ()=>{
+  let v = hexInput.value.trim();
+  if (v.startsWith('#')) v = v.slice(1);
+  if (v.length===3 || v.length===6){
+    const rgb = hexToRgb(v);
+    if (rgb){
+      const hsv = rgbToHsv(rgb.r,rgb.g,rgb.b);
+      state.h = hsv.h; state.s = hsv.s; state.v = hsv.v;
+      drawV();
+      updateUI();
+    }
+  }
+});
+
+[rInput,gInput,bInput].forEach(inp=>{
+  inp.addEventListener('input', ()=>{
+    const r = clamp(parseInt(rInput.value||0),0,255);
+    const g = clamp(parseInt(gInput.value||0),0,255);
+    const b = clamp(parseInt(bInput.value||0),0,255);
+    const hsv = rgbToHsv(r,g,b);
+    state.h = hsv.h; state.s = hsv.s; state.v = hsv.v;
+    drawV();
+    updateUI();
+  });
+});
+
+[hInput,sInput,vInput].forEach(inp=>{
+  inp.addEventListener('input', ()=>{
+    const h = clamp(parseFloat(hInput.value||0),0,360);
+    const s = clamp(parseFloat(sInput.value||0),0,100)/100;
+    const v = clamp(parseFloat(vInput.value||0),0,100)/100;
+    state.h = h; state.s = s; state.v = v;
+    drawV();
+    updateUI();
+  });
+});
+
+/* ====================
+   Copy buttons & toast
+   ==================== */
+
+const toast = document.getElementById('toast');
+let toastTimer = null;
+function showToast(text){
+  toast.textContent = text;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ toast.classList.remove('show'); }, 1600);
+}
+
+copyHexBtn.addEventListener('click', async ()=>{
+  const rgb = hsvToRgb(state.h, state.s, state.v);
+  const hex = '#' + rgbToHex(rgb.r,rgb.g,rgb.b);
+  try{
+    await navigator.clipboard.writeText(hex);
+    showToast('已複製 Hex：'+hex);
+  }catch(e){
+    showToast('複製失敗（瀏覽器限制）');
+  }
+});
+
+copyRgbBtn.addEventListener('click', async ()=>{
+  const rgb = hsvToRgb(state.h, state.s, state.v);
+  const txt = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+  try{
+    await navigator.clipboard.writeText(txt);
+    showToast('已複製 RGB：'+txt);
+  }catch(e){
+    showToast('複製失敗（瀏覽器限制）');
+  }
+});
+
+/* ====================
+   Swatches (presets & custom)
+   ==================== */
+
+function buildSwatches(){
+  swatchesEl.innerHTML = '';
+  for (let hex of defaultSwatches){
+    const el = document.createElement('button');
+    el.className = 'swatch';
+    el.style.background = hex;
+    el.title = hex;
+    el.type = 'button';
+    el.addEventListener('click', ()=>{
+      const rgb = hexToRgb(hex);
+      if (!rgb) return;
+      const hsv = rgbToHsv(rgb.r,rgb.g,rgb.b);
+      state.h = hsv.h; state.s = hsv.s; state.v = hsv.v;
+      drawV(); updateUI();
+    });
+    let pressTimer = null;
+    el.addEventListener('pointerdown', (e)=>{
+      pressTimer = setTimeout(()=>{
+        const rgb = hsvToRgb(state.h,state.s,state.v);
+        const newHex = '#' + rgbToHex(rgb.r,rgb.g,rgb.b);
+        el.style.background = newHex;
+        el.title = newHex;
+        showToast('已收藏至色票');
+      }, 700);
+    });
+    el.addEventListener('pointerup', ()=>{ clearTimeout(pressTimer); });
+    el.addEventListener('pointerleave', ()=>{ clearTimeout(pressTimer); });
+    swatchesEl.appendChild(el);
+  }
+}
+
+/* ====================
+   Reset
+   ==================== */
+
+resetBtn.addEventListener('click', ()=>{
+  state.h = 0; state.s = 1; state.v = 1;
+  drawV(); updateUI();
+  showToast('已重設為紅色');
+});
+
+/* ====================
+   EyeDropper (取色器)
+   ==================== */
+
+async function useEyeDropper(){
+  // EyeDropper API requires HTTPS or localhost. Check support.
+  if (!window.EyeDropper){
+    showToast('此瀏覽器不支援原生取色器（EyeDropper API）。');
+    return;
+  }
+  try{
+    const eye = new EyeDropper();
+    // open() 會顯示系統取色 UI，使用者選取後回傳 { sRGBHex: "#RRGGBB" }
+    const result = await eye.open();
+    if (result && result.sRGBHex){
+      const hex = result.sRGBHex;
+      // 更新所有欄位
+      const rgb = hexToRgb(hex);
+      if (rgb){
+        const hsv = rgbToHsv(rgb.r,rgb.g,rgb.b);
+        state.h = hsv.h; state.s = hsv.s; state.v = hsv.v;
+        drawV(); updateUI();
+        showToast('已擷取顏色：' + hex);
+      }
+    }
+  }catch(err){
+    // 使用者取消或其他錯誤
+    if (err && err.name === 'NotAllowedError'){
+      showToast('取色器權限被拒。請檢查瀏覽器設定。');
+    } else if (err && err.name === 'AbortError'){
+      // 取消選取，不需要顯示錯誤
+    } else {
+      console.error('EyeDropper error:', err);
+      showToast('取色器失敗（請確認為 HTTPS 或嘗試更新瀏覽器）');
+    }
+  }
+}
+
+eyedropBtn.addEventListener('click', useEyeDropper);
+
+/* ====================
+   Initialization
+   ==================== */
+
+function init(){
+  resizeAll();
+  const rgb = hexToRgb(hexInput.value);
+  if (rgb){
+    const hsv = rgbToHsv(rgb.r,rgb.g,rgb.b);
+    state.h = hsv.h; state.s = hsv.s; state.v = hsv.v;
+  }
+  drawV(); updateUI();
+  buildSwatches();
+  window.addEventListener('keydown', (e)=>{
+    if (e.key === 'ArrowLeft'){ state.h = (state.h - 3 + 360) % 360; drawV(); updateUI(); }
+    if (e.key === 'ArrowRight'){ state.h = (state.h + 3) % 360; drawV(); updateUI(); }
+    if (e.key === 'ArrowUp'){ state.v = clamp(state.v + 0.03,0,1); updateUI(); }
+    if (e.key === 'ArrowDown'){ state.v = clamp(state.v - 0.03,0,1); updateUI(); }
+  });
+}
+
+window.addEventListener('load', ()=>{
+  resizeAll();
+  init();
+});
+
+</script>
 </body>
 </html>
