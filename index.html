@@ -132,7 +132,6 @@
 
     <script>
         // --- 全域狀態變數 ---
-        // 將 'let' 改為 'var' 以避免重複聲明錯誤 (SyntaxError: Identifier 'H' has already been declared)
         var H = 0; // 色相 (Hue): 0-360
         var S = 1; // 飽和度 (Saturation): 0-1 (0% - 100%)
         var V = 1; // 亮度/明度 (Value): 0-1 (0% - 100%)
@@ -156,15 +155,14 @@
         const colorContainer = document.getElementById('colorPickerContainer');
         const valueContainer = document.getElementById('valueSliderContainer');
 
-        // 將 'let' 改為 'var' 以避免重複聲明錯誤
         var isPickingColor = false;
         var isSlidingValue = false;
 
 
-        // --- 工具函數：HSV <-> RGB 轉換 (保持不變，因為邏輯是正確的) ---
+        // --- 工具函數：HSV <-> RGB 轉換 ---
 
         /**
-         * 將 HSL (色相、飽和度、明度) 轉換為 RGB (紅、綠、藍)
+         * 將 HSV (色相、飽和度、明度) 轉換為 RGB (紅、綠、藍)
          */
         function hsvToRgb(h, s, v) {
             h = h / 60; 
@@ -257,10 +255,11 @@
         }
 
 
-        // --- 繪製函數 (修正: 使用標準 H/S 繪圖) ---
+        // --- 繪製函數 ---
 
         /**
-         * 繪製色相/飽和度選擇方格 (H on X, S on Y, V=1)
+         * 繪製色相/飽和度選擇方格 (H on X, S on Y, 固定 V=1)
+         * 修正了光譜偏暗的問題，將 H/S 平面固定在 V=1
          */
         function drawColorCanvas() {
             const width = colorCanvas.width;
@@ -272,8 +271,9 @@
             // 1. 繪製色相梯度 (Hue: X 軸, 0-360)
             let gradientH = colorCtx.createLinearGradient(0, 0, width, 0);
             for (let i = 0; i <= 360; i += 60) {
-                // 使用 HSL (L=50%) 來獲得最純的色譜
-                gradientH.addColorStop(i / 360, `hsl(${i}, 100%, 50%)`);
+                // *** 修正: 使用 hsvToRgb(H, S=1, V=1) 確保光譜是最高亮度 (V=1) 的純色 ***
+                const rgb = hsvToRgb(i, 1, 1);
+                gradientH.addColorStop(i / 360, `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`);
             }
             colorCtx.fillStyle = gradientH;
             colorCtx.fillRect(0, 0, width, height);
@@ -285,14 +285,8 @@
             colorCtx.fillStyle = gradientS;
             colorCtx.fillRect(0, 0, width, height);
             
-            // 3. 疊加黑色遮罩 (Value/Brightness: Y 軸, V=1 在頂部, V=0 在底部)
-            let gradientV = colorCtx.createLinearGradient(0, 0, 0, height);
-            gradientV.addColorStop(0, 'rgba(0, 0, 0, 0)'); // 頂部 (Y=0): 透明 (V=1)
-            gradientV.addColorStop(1, 'rgba(0, 0, 0, 1)'); // 底部 (Y=H): 黑色 (V=0)
-            colorCtx.fillStyle = gradientV;
-            colorCtx.fillRect(0, 0, width, height);
-            
-            // 備註: 雖然這是 H/S/V 混合模式，但它能完美呈現圖片中的色彩選擇器效果 (左上角白，左下角黑，右側彩虹)
+            // 3. *** 移除黑色遮罩 (Value/Brightness: Y 軸) ***
+            // 由於 V 由獨立滑桿控制，此處固定 V=1，以保持光譜的最高亮度。
         }
 
         /**
@@ -303,16 +297,11 @@
             const height = valueCanvas.height;
 
             // 取得當前 H 和 S 決定的純色 (V=1)
-            const pureRgb = hsvToRgb(H, S, 1);
+            // 注意: 這裡的 V 始終取 1，確保滑桿頂部是 H/S 平面選取的純色
+            const pureRgb = hsvToRgb(H, S, 1); 
             const pureColor = `rgb(${pureRgb.r}, ${pureRgb.g}, ${pureRgb.b})`;
 
             // 從頂部的純色 (V=1) 到底部的黑色 (V=0) 繪製線性梯度
-            const gradient = valueCtx.createLinearGradient(0, 0, 0, height);
-            gradient.addColorStop(0, '#ffffff'); // 頂部: 白色 (V=1)
-            gradient.addColorStop(0.5, pureColor); // 中間: 純色 (V=1, 但為了模擬效果，放在中間)
-            gradient.addColorStop(1, '#000000'); // 底部: 黑色 (V=0)
-            
-            // 為了更像圖片中的灰階滑桿 (通常是 Value/Brightness 滑桿)，我們從純色 (上) 到黑色 (下)
             const gradientSimple = valueCtx.createLinearGradient(0, 0, 0, height);
             gradientSimple.addColorStop(0, pureColor); // 頂部: 純色 (V=1)
             gradientSimple.addColorStop(1, '#000000'); // 底部: 黑色 (V=0)
@@ -405,8 +394,6 @@
             H = (x / rect.width) * 360;
             
             // S: 0-1, 對應 Y 軸 (0=白, H=純色)
-            // 由於 drawColorCanvas 中 S=0 在頂部 (Y=0) 且 S=1 在底部 (Y=H)，因此 S = y / height
-            // 備註: 這是 H/V 選擇器的標準，但這裡我們用 H/S 來對應 H/S/V 狀態
             S = y / rect.height; 
             S = Math.max(0, Math.min(S, 1)); // 限制在 0 到 1 之間
             
@@ -448,7 +435,7 @@
             if (event.cancelable) event.preventDefault();
         }
         
-        // --- 輸入處理函數 (保持不變) ---
+        // --- 輸入處理函數 ---
 
         /**
          * 處理 Hex 輸入框的變更
