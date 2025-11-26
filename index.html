@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ultra美型色碼選擇器（含取色器）</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -13,18 +13,10 @@
     --radius: 16px;
   }
   *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0;
-    font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Arial;
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Arial;display:flex;align-items:center;justify-content:center;padding:28px;color:#0f172a;
     background: radial-gradient(1200px 600px at 10% 10%, #f7fbff 0%, transparent 20%),
                 radial-gradient(1000px 400px at 90% 90%, #fff2f8 0%, transparent 18%),
                 linear-gradient(180deg,#eef5ff 0%, #fbfbff 100%);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding:28px;
-    color:#0f172a;
   }
 
   .card{
@@ -56,159 +48,35 @@
     align-items:start;
   }
 
-  /* left area: picker */
-  .picker-wrap{
-    display:flex;
-    gap:14px;
-    align-items:stretch;
-  }
-
-  .hs-box{
-    flex:1;
-    min-height:320px;
-    border-radius:16px;
-    overflow:hidden;
-    position:relative;
-    box-shadow: 0 8px 24px rgba(15,23,42,0.06);
-    border:1px solid rgba(15,23,42,0.04);
-  }
+  .picker-wrap{display:flex;gap:14px;align-items:stretch;}
+  .hs-box{flex:1;min-height:320px;border-radius:16px;overflow:hidden;position:relative;box-shadow:0 8px 24px rgba(15,23,42,0.06);border:1px solid rgba(15,23,42,0.04);}
+  .v-box{width:44px;min-height:320px;border-radius:12px;overflow:hidden;position:relative;box-shadow:0 8px 24px rgba(2,6,23,0.04);border:1px solid rgba(15,23,42,0.04);}
   canvas{display:block;width:100%;height:100%}
-  .indicator{
-    position:absolute;
-    width:18px;height:18px;border-radius:50%;
-    transform:translate(-50%,-50%);
-    box-shadow: 0 0 0 4px rgba(255,255,255,0.85), 0 6px 12px rgba(2,6,23,0.25);
-    pointer-events:none;
-  }
+  .indicator{position:absolute;width:18px;height:18px;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 4px rgba(255,255,255,0.85),0 6px 12px rgba(2,6,23,0.25);pointer-events:none;}
+  .v-ind{position:absolute;left:0;right:0;height:10px;border-radius:6px;transform:translateY(-50%);pointer-events:none;box-shadow:0 6px 10px rgba(2,6,23,0.12);}
 
-  .v-box{
-    width:44px;
-    min-height:320px;
-    border-radius:12px;
-    overflow:hidden;
-    position:relative;
-    box-shadow: 0 8px 24px rgba(2,6,23,0.04);
-    border:1px solid rgba(15,23,42,0.04);
-  }
-  .v-ind{
-    position:absolute;
-    left:0;right:0;
-    height:10px;
-    border-radius:6px;
-    transform:translateY(-50%);
-    pointer-events:none;
-    box-shadow: 0 6px 10px rgba(2,6,23,0.12);
-  }
+  .preview{margin-top:14px;border-radius:14px;height:92px;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px;letter-spacing:0.2px;border:1px solid rgba(0,0,0,0.06);box-shadow: inset 0 -10px 30px rgba(0,0,0,0.08);}
 
-  /* preview */
-  .preview{
-    margin-top:14px;
-    border-radius:14px;
-    height:92px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:white;
-    font-weight:700;
-    font-size:16px;
-    letter-spacing:0.2px;
-    border:1px solid rgba(0,0,0,0.06);
-    box-shadow: inset 0 -10px 30px rgba(0,0,0,0.08);
-  }
-
-  /* right panel */
-  .panel-right{
-    padding:16px;
-    background:linear-gradient(180deg,rgba(255,255,255,0.7),rgba(255,255,255,0.5));
-    border-radius:14px;
-    border:1px solid rgba(2,6,23,0.04);
-  }
-
+  .panel-right{padding:16px;background:linear-gradient(180deg,rgba(255,255,255,0.7),rgba(255,255,255,0.5));border-radius:14px;border:1px solid rgba(2,6,23,0.04);}
   .field{margin-bottom:12px}
   label{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px}
-  input[type="text"], input[type="number"]{
-    width:100%;
-    padding:10px 12px;
-    border-radius:10px;
-    border:1px solid rgba(15,23,42,0.06);
-    background:linear-gradient(180deg,#ffffff,#fbfdff);
-    font-size:14px;
-    outline:none;
-    transition:box-shadow .12s, border-color .12s, transform .08s;
-    text-align:center;
-  }
-  input[type="text"]:focus, input[type="number"]:focus{
-    box-shadow:0 6px 18px rgba(59,130,246,0.12);
-    border-color:var(--accent);
-  }
-
-  .row{display:flex;gap:8px}
-  .row .col{flex:1}
-
-  .copy-btn{
-    margin-top:6px;
-    display:inline-flex;
-    gap:8px;
-    align-items:center;
-    justify-content:center;
-    padding:8px 12px;
-    border-radius:10px;
-    border:1px solid rgba(15,23,42,0.06);
-    background:linear-gradient(180deg,#fff,#f7fbff);
-    cursor:pointer;
-    font-weight:600;
-    color:var(--accent);
-    transition:transform .08s, box-shadow .12s;
-  }
+  input[type="text"], input[type="number"]{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(15,23,42,0.06);background:linear-gradient(180deg,#ffffff,#fbfdff);font-size:14px;outline:none;text-align:center;transition:box-shadow .12s, border-color .12s, transform .08s;}
+  input:focus{box-shadow:0 6px 18px rgba(59,130,246,0.12);border-color:var(--accent);}
+  .row{display:flex;gap:8px}.row .col{flex:1}
+  .copy-btn{margin-top:6px;display:inline-flex;gap:8px;align-items:center;justify-content:center;padding:8px 12px;border-radius:10px;border:1px solid rgba(15,23,42,0.06);background:linear-gradient(180deg,#fff,#f7fbff);cursor:pointer;font-weight:600;color:var(--accent);transition:transform .08s, box-shadow .12s;}
   .copy-btn:active{transform:translateY(1px)}
   .swatches{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-  .swatch{
-    width:34px;height:34px;border-radius:8px;border:1px solid rgba(2,6,23,0.06);
-    box-shadow:0 6px 12px rgba(2,6,23,0.06);
-    cursor:pointer;position:relative;
-  }
+  .swatch{width:34px;height:34px;border-radius:8px;border:1px solid rgba(2,6,23,0.06);box-shadow:0 6px 12px rgba(2,6,23,0.06);cursor:pointer;position:relative;}
   .note{font-size:12px;color:var(--muted);margin-top:6px}
+  .eyedropper-btn{padding:8px 12px;border-radius:10px;border:1px solid rgba(15,23,42,0.06);background:linear-gradient(180deg,#fff,#f7fbff);cursor:pointer;font-weight:700;color:var(--accent);}
 
-  .eyedropper-btn{
-    padding:8px 12px;border-radius:10px;border:1px solid rgba(15,23,42,0.06);
-    background:linear-gradient(180deg,#fff,#f7fbff);
-    cursor:pointer;font-weight:700;color:var(--accent);
-  }
+  @media(max-width:880px){.grid{grid-template-columns:1fr}.picker-wrap{flex-direction:column}.v-box{width:100%}.hs-box{min-height:220px}}
 
-  /* small responsiveness */
-  @media (max-width:880px){
-    .grid{grid-template-columns:1fr}
-    .picker-wrap{flex-direction:column}
-    .v-box{width:100%}
-    .hs-box{min-height:220px}
-  }
-
-  /* 超小螢幕自適應 */
-  @media (max-width:400px){
-    .preview{height:72px;font-size:14px;}
-    .hs-box{min-height:160px;}
-    .v-box{min-height:32px;}
-    .picker-wrap{gap:10px;}
-    .panel-right{padding:10px;}
-    .row .col input{font-size:13px;}
-    .copy-btn{padding:6px 10px;font-size:13px;}
-    header{gap:6px;}
-    header h1{font-size:18px;}
-    header .subtitle{font-size:11px;}
-  }
-
-  /* tiny copy toast */
-  .toast{
-    position:fixed;left:50%;transform:translateX(-50%);
-    bottom:28px;padding:10px 16px;border-radius:999px;background:rgba(15,23,42,0.9);
-    color:white;font-weight:600;font-size:13px;opacity:0;pointer-events:none;
-    transition:opacity .18s, transform .18s;
-  }
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:28px;padding:10px 16px;border-radius:999px;background:rgba(15,23,42,0.9);color:white;font-weight:600;font-size:13px;opacity:0;pointer-events:none;transition:opacity .18s, transform .18s;}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);pointer-events:auto}
 </style>
 </head>
 <body>
-
 <div class="card" role="application" aria-label="色碼選擇器">
   <header>
     <div>
@@ -216,7 +84,7 @@
       <div class="subtitle">即時 Hex / RGB / HSV 轉換 • 可收藏色票 • 支援拖曳與觸控</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
-      <button id="eyedropBtn" class="eyedropper-btn" title="從畫面擷取顏色">取色器（從畫面擷取）</button>
+      <button id="eyedropBtn" class="eyedropper-btn">取色器（從畫面擷取）</button>
       <button id="resetBtn" style="padding:8px 12px;border-radius:10px;border:1px solid rgba(15,23,42,0.06);background:#fff;font-weight:700;color:var(--muted);cursor:pointer">重設</button>
     </div>
   </header>
@@ -224,58 +92,29 @@
   <div class="grid">
     <div>
       <div class="picker-wrap">
-        <div class="hs-box" id="hsBox" aria-label="色相與飽和度選擇">
-          <canvas id="hsCanvas"></canvas>
-          <div id="hsIndicator" class="indicator" aria-hidden="true"></div>
-        </div>
-
-        <div class="v-box" id="vBox" aria-label="亮度選擇">
-          <canvas id="vCanvas"></canvas>
-          <div id="vIndicator" class="v-ind" aria-hidden="true"></div>
-        </div>
+        <div class="hs-box" id="hsBox"><canvas id="hsCanvas"></canvas><div id="hsIndicator" class="indicator"></div></div>
+        <div class="v-box" id="vBox"><canvas id="vCanvas"></canvas><div id="vIndicator" class="v-ind"></div></div>
       </div>
-
-      <div id="preview" class="preview" aria-live="polite">#FF0000 — RGB(255,0,0)</div>
+      <div id="preview" class="preview">#FF0000 — RGB(255,0,0)</div>
     </div>
 
-    <aside class="panel-right" aria-label="色碼資訊">
+    <aside class="panel-right">
       <div class="field">
-        <label for="hex">Hex（可輸入 3 或 6 碼，# 可有可無）</label>
-        <input id="hex" type="text" maxlength="7" placeholder="FF00AA 或 #FF00AA" value="#FF0000" aria-describedby="hexHelp">
-        <div class="note" id="hexHelp">輸入 Hex 後會立即更新畫面</div>
+        <label for="hex">Hex</label>
+        <input id="hex" type="text" maxlength="7" placeholder="FF00AA 或 #FF00AA" value="#FF0000">
       </div>
-
       <div class="field row">
-        <div class="col">
-          <label for="r">R</label>
-          <input id="r" type="number" min="0" max="255" value="255">
-        </div>
-        <div class="col">
-          <label for="g">G</label>
-          <input id="g" type="number" min="0" max="255" value="0">
-        </div>
-        <div class="col">
-          <label for="b">B</label>
-          <input id="b" type="number" min="0" max="255" value="0">
-        </div>
+        <div class="col"><label>R</label><input id="r" type="number" min="0" max="255" value="255"></div>
+        <div class="col"><label>G</label><input id="g" type="number" min="0" max="255" value="0"></div>
+        <div class="col"><label>B</label><input id="b" type="number" min="0" max="255" value="0"></div>
       </div>
-
       <div class="field row" style="align-items:center">
-        <div style="flex:1">
-          <label>HSV</label>
-          <div style="display:flex;gap:8px">
-            <input id="h" type="number" min="0" max="360" value="0" style="flex:1" />
-            <input id="s" type="number" min="0" max="100" value="100" style="width:84px" />
-            <input id="v" type="number" min="0" max="100" value="100" style="width:84px" />
-          </div>
-        </div>
+        <div style="flex:1"><label>HSV</label><div style="display:flex;gap:8px"><input id="h" type="number" min="0" max="360" value="0" style="flex:1"><input id="s" type="number" min="0" max="100" value="100" style="width:84px"><input id="v" type="number" min="0" max="100" value="100" style="width:84px"></div></div>
       </div>
-
       <div style="display:flex;gap:8px;margin-top:8px">
-        <div class="copy-btn" id="copyHexBtn" title="複製 Hex">複製 Hex</div>
-        <div class="copy-btn" id="copyRgbBtn" title="複製 RGB">複製 RGB</div>
+        <div class="copy-btn" id="copyHexBtn">複製 Hex</div>
+        <div class="copy-btn" id="copyRgbBtn">複製 RGB</div>
       </div>
-
       <div style="margin-top:12px">
         <label>常用色票</label>
         <div class="swatches" id="swatches"></div>
@@ -284,40 +123,124 @@
     </aside>
   </div>
 </div>
-
-<div id="toast" class="toast" role="status" aria-live="polite">複製成功</div>
+<div id="toast" class="toast">複製成功</div>
 
 <script>
-/* ===============================
-   Helper color conversion utils
-   =============================== */
+const hsCanvas=document.getElementById('hsCanvas'),vCanvas=document.getElementById('vCanvas');
+const hsCtx=hsCanvas.getContext('2d'),vCtx=vCanvas.getContext('2d');
+const hsBox=document.getElementById('hsBox'),vBox=document.getElementById('vBox');
+const hsIndicator=document.getElementById('hsIndicator'),vIndicator=document.getElementById('vIndicator');
+const preview=document.getElementById('preview');
+const hexInput=document.getElementById('hex'),rInput=document.getElementById('r'),gInput=document.getElementById('g'),bInput=document.getElementById('b');
+const hInput=document.getElementById('h'),sInput=document.getElementById('s'),vInput=document.getElementById('v');
+const copyHexBtn=document.getElementById('copyHexBtn'),copyRgbBtn=document.getElementById('copyRgbBtn');
+const swatchesEl=document.getElementById('swatches');
+const resetBtn=document.getElementById('resetBtn'),eyedropBtn=document.getElementById('eyedropBtn');
+let state={h:0,s:1,v:1};
+const defaultSwatches=['#FF3B30','#FF9500','#FFCC00','#34C759','#5AC8FA','#0A84FF','#5856D6','#AF52DE','#ff7ab6','#ffd6e7','#b8ffe1','#d1e9ff','#ffe9c8'];
 
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
-function hsvToRgb(h,s,v){
-  let c=v*s, x=c*(1-Math.abs((h/60)%2-1)), m=v-c, r=0,g=0,b=0;
-  if(h<60){r=c;g=x;b=0;}else if(h<120){r=x;g=c;b=0;}else if(h<180){r=0;g=c;b=x;}else if(h<240){r=0;g=x;b=c;}else if(h<300){r=x;g=0;b=c;}else{r=c;g=0;b=x;}
-  return {r:Math.round((r+m)*255),g:Math.round((g+m)*255),b:Math.round((b+m)*255)};
+function hsvToRgb(h,s,v){let c=v*s,x=c*(1-Math.abs((h/60)%2-1)),m=v-c,r=0,g=0,b=0;if(h<60){r=c;g=x;b=0;}else if(h<120){r=x;g=c;b=0;}else if(h<180){r=0;g=c;b=x;}else if(h<240){r=0;g=x;b=c;}else if(h<300){r=x;g=0;b=c;}else{r=c;g=0;b=x;}return{r:Math.round((r+m)*255),g:Math.round((g+m)*255),b:Math.round((b+m)*255)}}
+function rgbToHsv(r,g,b){r/=255;g/=255;b/=255;let max=Math.max(r,g,b),min=Math.min(r,g,b),d=max-min,h=0;if(d===0)h=0;else if(max===r)h=((g-b)/d)%6;else if(max===g)h=(b-r)/d+2;else h=(r-g)/d+4;h=h*60;if(h<0)h+=360;let s=max===0?0:d/max,v=max;return{h:Math.round(h),s:parseFloat(s.toFixed(4)),v:parseFloat(v.toFixed(4))}}
+function rgbToHex(r,g,b){return[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('').toUpperCase()}
+function hexToRgb(hex){hex=(''+hex).trim().replace(/^#/,'');if(hex.length===3)hex=hex.split('').map(c=>c+c).join('');if(!/^[0-9A-Fa-f]{6}$/.test(hex))return null;return{r:parseInt(hex.slice(0,2),16),g:parseInt(hex.slice(2,4),16),b:parseInt(hex.slice(4,6),16)}}
+
+function resizeAll(){
+  const dspr=window.devicePixelRatio||1;
+  function fit(c,container){
+    const r=container.getBoundingClientRect();
+    c.width=Math.max(1,Math.floor(r.width*dspr));
+    c.height=Math.max(1,Math.floor(r.height*dspr));
+    c.style.width=r.width+'px';
+    c.style.height=r.height+'px';
+    c.getContext('2d').setTransform(dspr,0,0,dspr,0,0);
+  }
+  fit(hsCanvas,hsBox);fit(vCanvas,vBox);
+  drawHS();drawV();updateUI();
 }
-function rgbToHsv(r,g,b){
-  r/=255;g/=255;b/=255;
-  let max=Math.max(r,g,b),min=Math.min(r,g,b),d=max-min,h=0;
-  if(d===0)h=0;else if(max===r)h=((g-b)/d)%6;else if(max===g)h=(b-r)/d+2;else h=(r-g)/d+4;
-  h=(h*60);if(h<0)h+=360;
-  let s=max===0?0:d/max,v=max;
-  return {h:Math.round(h),s:parseFloat(s.toFixed(4)),v:parseFloat(v.toFixed(4))};
-}
-function rgbToHex(r,g,b){return [r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('').toUpperCase();}
-function hexToRgb(hex){
-  hex=(''+hex).trim().replace(/^#/,'');
-  if(hex.length===3)hex=hex.split('').map(c=>c+c).join('');
-  if(!/^[0-9A-Fa-f]{6}$/.test(hex))return null;
-  return {r:parseInt(hex.slice(0,2),16),g:parseInt(hex.slice(2,4),16),b:parseInt(hex.slice(4,6),16)};
+window.addEventListener('resize',resizeAll);window.addEventListener('orientationchange',resizeAll);
+
+function drawHS(){const w=hsCanvas.width/(window.devicePixelRatio||1),h=hsCanvas.height/(window.devicePixelRatio||1);
+let grad=hsCtx.createLinearGradient(0,0,w,0);for(let i=0;i<=360;i+=60)grad.addColorStop(i/360,`hsl(${i},100%,50%)`);hsCtx.fillStyle=grad;hsCtx.fillRect(0,0,w,h);
+let sat=hsCtx.createLinearGradient(0,0,0,h);sat.addColorStop(0,'rgba(255,255,255,1)');sat.addColorStop(1,'rgba(255,255,255,0)');hsCtx.fillStyle=sat;hsCtx.fillRect(0,0,w,h);
+let val=hsCtx.createLinearGradient(0,0,0,h);val.addColorStop(0,'rgba(0,0,0,0)');val.addColorStop(1,'rgba(0,0,0,1)');hsCtx.fillStyle=val;hsCtx.fillRect(0,0,w,h);}
+function drawV(){const w=vCanvas.width/(window.devicePixelRatio||1),h=vCanvas.height/(window.devicePixelRatio||1);
+const topRgb=hsvToRgb(state.h,state.s,1);const g=vCtx.createLinearGradient(0,0,0,h);g.addColorStop(0,`rgb(${topRgb.r},${topRgb.g},${topRgb.b})`);g.addColorStop(1,'#000');vCtx.fillStyle=g;vCtx.fillRect(0,0,w,h);}
+
+function updateUI(){
+  const rgb=hsvToRgb(state.h,state.s,state.v),hex='#'+rgbToHex(rgb.r,rgb.g,rgb.b);
+  preview.style.background=hex;
+  preview.style.color=(rgb.r*299+rgb.g*587+rgb.b*114)/1000>140?'#0b1220':'#fff';
+  preview.textContent=`${hex} — RGB(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+  hexInput.value=hex;rInput.value=rgb.r;gInput.value=rgb.g;bInput.value=rgb.b;
+  hInput.value=Math.round(state.h);sInput.value=Math.round(state.s*100);vInput.value=Math.round(state.v*100);
+  const hsR=hsBox.getBoundingClientRect(),x=(state.h%360)/360*hsR.width,y=(1-state.s)*hsR.height;hsIndicator.style.left=x+'px';hsIndicator.style.top=y+'px';
+  const vR=vBox.getBoundingClientRect(),vy=(1-state.v)*vR.height;vIndicator.style.top=vy+'px';vIndicator.style.background=hex;
 }
 
-/* ====================
-// 後面 JS 內容保持原本你提供的版本
-// 不需改動
-==================== */
+// ===== 拖曳/觸控事件 =====
+function pickHS(e){
+  const rect=hsBox.getBoundingClientRect();
+  let x=(e.touches?e.touches[0].clientX:e.clientX)-rect.left;
+  let y=(e.touches?e.touches[0].clientY:e.clientY)-rect.top;
+  x=clamp(x,0,rect.width);y=clamp(y,0,rect.height);
+  state.h=(x/rect.width)*360;state.s=1-(y/rect.height);drawV();updateUI();
+}
+function pickV(e){
+  const rect=vBox.getBoundingClientRect();
+  let y=(e.touches?e.touches[0].clientY:e.clientY)-rect.top;y=clamp(y,0,rect.height);
+  state.v=1-(y/rect.height);updateUI();
+}
+
+function addDrag(el,handler){
+  let dragging=false;
+  el.addEventListener('mousedown',e=>{dragging=true;handler(e);e.preventDefault()});
+  el.addEventListener('touchstart',e=>{dragging=true;handler(e);e.preventDefault()});
+  window.addEventListener('mousemove',e=>{if(dragging){handler(e);e.preventDefault()}});
+  window.addEventListener('touchmove',e=>{if(dragging){handler(e);e.preventDefault()}},{passive:false});
+  window.addEventListener('mouseup',()=>dragging=false);
+  window.addEventListener('touchend',()=>dragging=false);
+}
+addDrag(hsBox,pickHS);addDrag(vBox,pickV);
+
+// ===== 輸入同步 =====
+function updateFromInputs(){
+  let hex=hexInput.value.replace(/^#/,'');
+  let rgb=hexToRgb(hex);
+  if(rgb){state=rgbToHsv(rgb.r,rgb.g,rgb.b);state.s=Math.min(1,Math.max(0,state.s));state.v=Math.min(1,Math.max(0,state.v));drawV();updateUI();}
+}
+hexInput.addEventListener('change',updateFromInputs);
+[rInput,gInput,bInput].forEach(inp=>inp.addEventListener('change',()=>{
+  const r=parseInt(rInput.value),g=parseInt(gInput.value),b=parseInt(bInput.value);
+  state=rgbToHsv(r,g,b);drawV();updateUI();
+}));
+[hInput,sInput,vInput].forEach(inp=>inp.addEventListener('change',()=>{
+  const h=parseFloat(hInput.value),s=parseFloat(sInput.value)/100,v=parseFloat(vInput.value)/100;
+  state={h:s<0?0:clamp(h,0,360),s:clamp(s,0,1),v:clamp(v,0,1)};drawV();updateUI();
+}));
+
+// ===== 複製功能 =====
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1200)}
+copyHexBtn.addEventListener('click',()=>{navigator.clipboard.writeText(hexInput.value);toast('Hex 複製成功')});
+copyRgbBtn.addEventListener('click',()=>{navigator.clipboard.writeText(`rgb(${rInput.value},${gInput.value},${bInput.value})`);toast('RGB 複製成功')});
+
+// ===== 色票 =====
+function renderSwatches(){
+  swatchesEl.innerHTML='';
+  defaultSwatches.forEach(c=>{
+    const el=document.createElement('div');el.className='swatch';el.style.background=c;
+    el.addEventListener('click',()=>{hexInput.value=c;updateFromInputs();});
+    el.addEventListener('contextmenu',e=>{e.preventDefault();defaultSwatches[defaultSwatches.indexOf(c)]=hexInput.value;renderSwatches();});
+    swatchesEl.appendChild(el);
+  });
+}
+renderSwatches();
+
+// ===== 重設 =====
+resetBtn.addEventListener('click',()=>{state={h:0,s:1,v:1};drawV();updateUI();});
+
+// ===== 初始化 =====
+resizeAll();
 </script>
 </body>
 </html>
