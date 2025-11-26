@@ -126,6 +126,26 @@
 <div id="toast" class="toast">複製成功</div>
 
 <script>
+  // ===== 取色器功能 =====
+eyedropBtn.addEventListener('click', async ()=>{
+  if (!window.EyeDropper) {
+    toast('你的瀏覽器不支援取色器 😢');
+    return;
+  }
+  try {
+    const eye = new EyeDropper();
+    const result = await eye.open(); // 會彈出原生取色器
+    if(result && result.sRGBHex){
+      hexInput.value = result.sRGBHex.toUpperCase();
+      updateFromInputs();
+      toast('已套用取色顏色 ' + result.sRGBHex.toUpperCase());
+    }
+  } catch(err){
+    console.log(err);
+    toast('取色失敗或已取消');
+  }
+});
+
 const hsCanvas=document.getElementById('hsCanvas'),vCanvas=document.getElementById('vCanvas');
 const hsCtx=hsCanvas.getContext('2d'),vCtx=vCanvas.getContext('2d');
 const hsBox=document.getElementById('hsBox'),vBox=document.getElementById('vBox');
@@ -244,3 +264,4 @@ resizeAll();
 </script>
 </body>
 </html>
+
